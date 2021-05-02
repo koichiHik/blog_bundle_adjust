@@ -7,11 +7,11 @@ set(LIBRARY_NAME utility)
 # Description for library.
 ################################
 set(SRC_FILES
-    src/utility.cc
+    src/file_utility.cc
     src/visualize.cc
 )
 set(PUBLIC_HEADERS
-    "include/utility.h"
+    "include/file_utility.h"
     "include/visualize.h"
 )
 
@@ -28,7 +28,7 @@ target_include_directories(${LIBRARY_NAME} PRIVATE
     ${PCL_INCLUDE_DIRS}
 )
 target_link_libraries(${LIBRARY_NAME} PUBLIC
-    core
+    optimization
     glog::glog
     ${GFLAGS_LIBRARIES}
     ${OpenCV_LIBS}

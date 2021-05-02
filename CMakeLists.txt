@@ -31,7 +31,7 @@ find_package(PCL REQUIRED)
 
 # Module directory.
 add_subdirectory(src/utility)
-add_subdirectory(src/core)
+add_subdirectory(src/optimization)
 
 # Application directory. All executables contained in this directory.
 add_subdirectory(src/applications)

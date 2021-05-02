@@ -19,8 +19,8 @@
 #include "appl_utility.h"
 #include <common_def.h>
 #include <error_metric.h>
+#include <file_utility.h>
 #include <optimizations.h>
-#include <utility.h>
 
 DEFINE_string(camera_extrinsic_file_path, "", "");
 DEFINE_string(camera_intrinsic_file_path, "", "");

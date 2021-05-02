@@ -28,8 +28,8 @@
 // Original
 #include <bundle_adjust.h>
 #include <common_def.h>
+#include <file_utility.h>
 #include <geometry.h>
-#include <utility.h>
 
 DEFINE_string(camera_file_path, "", "");
 DEFINE_string(image_location_file_path, "", "");

@@ -6,7 +6,6 @@
 #include <Eigen/Core>
 
 // Original
-#include "derivative_common.h"
 #include "rotations.h"
 
 #pragma GCC diagnostic push

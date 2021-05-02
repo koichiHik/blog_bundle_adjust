@@ -2,7 +2,7 @@
 cmake_minimum_required(VERSION 3.8)
 project(sfm_exp)
 
-set(LIBRARY_NAME core)
+set(LIBRARY_NAME optimization)
 ################################
 # Description for library.
 ################################
@@ -52,26 +52,26 @@ install(TARGETS ${LIBRARY_NAME}
 include_directories(${GTEST_INCLUDE_DIRS})
 
 # Test for functions in unnamed namespacd in depth_image_util.cc
-add_executable(core_unit_test
+add_executable(optimization_unit_test
     src/geometry.cc
     test/test_rq_decomposition.cc
 )
-target_include_directories(core_unit_test PUBLIC 
+target_include_directories(optimization_unit_test PUBLIC 
     ${EIGEN3_INCLUDE_DIR}
     include
     src
 )
-target_link_libraries(core_unit_test PRIVATE
+target_link_libraries(optimization_unit_test PRIVATE
     GTest::GTest 
     GTest::Main
     glog::glog
     ${OpenCV_LIBS}
 )
-target_compile_definitions(core_unit_test PRIVATE CANLIB_EXPORT=1)
+target_compile_definitions(optimization_unit_test PRIVATE CANLIB_EXPORT=1)
 
 # Google Testの各テストケースごとにCTestのテストを作成する
 #gtest_add_tests(TARGET test_depth_image_util_unnamed)
 
 # CTestのテストをひとつだけ作成する
-add_test(NAME core_unit_test 
-    COMMAND core_unit_test)
+add_test(NAME optimization_unit_test 
+    COMMAND optimization_unit_test)

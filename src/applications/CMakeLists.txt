@@ -13,7 +13,7 @@ target_include_directories(${APP_NAME} PUBLIC
     ${PCL_INCLUDE_DIRS}
 )
 target_link_libraries(${APP_NAME} PUBLIC
-    core
+    optimization
     utility
     glog::glog
     ${GFLAGS_LIBRARIES}
@@ -34,7 +34,7 @@ target_include_directories(${APP_NAME} PUBLIC
     ${PCL_INCLUDE_DIRS}
 )
 target_link_libraries(${APP_NAME} PUBLIC
-    core
+    optimization
     utility
     glog::glog
     ${GFLAGS_LIBRARIES}
@@ -55,7 +55,7 @@ target_include_directories(${APP_NAME} PUBLIC
     ${PCL_INCLUDE_DIRS}
 )
 target_link_libraries(${APP_NAME} PUBLIC
-    core
+    optimization
     utility
     glog::glog
     ${GFLAGS_LIBRARIES}
@@ -76,7 +76,7 @@ target_include_directories(${APP_NAME} PUBLIC
     ${PCL_INCLUDE_DIRS}
 )
 target_link_libraries(${APP_NAME} PUBLIC
-    core
+    optimization
     utility
     glog::glog
     ${GFLAGS_LIBRARIES}
@@ -97,7 +97,7 @@ target_include_directories(${APP_NAME} PUBLIC
     ${PCL_INCLUDE_DIRS}
 )
 target_link_libraries(${APP_NAME} PUBLIC
-    core
+    optimization
     utility
     glog::glog
     ${GFLAGS_LIBRARIES}

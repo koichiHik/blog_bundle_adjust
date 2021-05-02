@@ -23,8 +23,8 @@
 #include <opencv2/imgproc.hpp>
 
 // Original
+#include <file_utility.h>
 #include <geometry.h>
-#include <utility.h>
 #include <visualize.h>
 
 DEFINE_string(camera_extrinsic_file_path, "", "");

@@ -52,10 +52,6 @@ void optimization::CeresSolver::Optimize(
         ceres::CostFunction *cost_function =
             optimization::CeresReprojError::Create(meas(0), meas(1));
 
-        Eigen::Vector3d &point = points3d_tmp[trk_idx];
-        Eigen::Vector3d &Rot = Rot_tmp[cam_ext_idx];
-        Eigen::Vector3d &T = T_tmp[cam_ext_idx];
-
         problem.AddResidualBlock(
             cost_function, nullptr, Rot_tmp[cam_ext_idx].data(),
             T_tmp[cam_ext_idx].data(),
