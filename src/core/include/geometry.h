@@ -12,7 +12,7 @@
 // Original
 #include "common_def.h"
 
-namespace core {
+namespace optimization {
 
 void DecomposeRQ(const Eigen::Matrix3d &M, Eigen::Matrix3d &R,
                  Eigen::Matrix3d &Q);
@@ -35,6 +35,6 @@ std::vector<Eigen::Vector2d>
 ProjectPoint(std::vector<Eigen::Vector3d> &points3d, Eigen::Matrix3d &R,
              Eigen::Vector3d &T, Eigen::Matrix3d &K);
 
-} // namespace core
+} // namespace optimization
 
 #endif

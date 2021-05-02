@@ -21,7 +21,7 @@
 #include "differential_operators.h"
 #include "rotations.h"
 
-namespace core {
+namespace optimization {
 
 void PureNewton::Optimize(
     const std::vector<Track> &tracks, const std::vector<Camera> &extrinsics,
@@ -39,7 +39,7 @@ void PureNewton::Optimize(
   std::vector<Eigen::Vector3d> points3d_ = points3d;
   for (size_t cam_idx = 0; cam_idx < extrinsics.size(); cam_idx++) {
     T[cam_idx] = extrinsics[cam_idx].block<3, 1>(0, 3);
-    core::ConvertRotationMatrixToAngleAxis(
+    optimization::ConvertRotationMatrixToAngleAxis(
         extrinsics[cam_idx].block<3, 3>(0, 0), Rot[cam_idx]);
   }
 
@@ -51,14 +51,15 @@ void PureNewton::Optimize(
   while (true) {
 
     // X. Compute gradient of reprojection error.
-    Eigen::MatrixXd grad = core::ComputeGradient(K, T, Rot, points3d_, tracks,
-                                                 extrinsic_intrinsic_map);
-    Eigen::MatrixXd H = core::ComputeHessian(K, T, Rot, points3d_, tracks,
-                                             extrinsic_intrinsic_map);
+    Eigen::MatrixXd grad = optimization::ComputeGradient(
+        K, T, Rot, points3d_, tracks, extrinsic_intrinsic_map);
+    Eigen::MatrixXd H = optimization::ComputeHessian(
+        K, T, Rot, points3d_, tracks, extrinsic_intrinsic_map);
 
     // X. Make hessian positive definite.
     Eigen::MatrixXd Hp =
-        core::MakeHessianPositiveDefiniteViaMultipleIdentity(H, 2, BETA);
+        optimization::MakeHessianPositiveDefiniteViaMultipleIdentity(H, 2,
+                                                                     BETA);
 
     // X. Solve linear equations.
     Eigen::FullPivLU<Eigen::MatrixXd> lu_decomp(Hp);
@@ -99,9 +100,9 @@ void PureNewton::Optimize(
   extrinsics_dst.resize(T.size());
   for (size_t cam_ext_idx = 0; cam_ext_idx < T.size(); cam_ext_idx++) {
     Eigen::Matrix3d R;
-    core::ConvertAngleAxisToRotationMatrix(Rot[cam_ext_idx], R);
+    optimization::ConvertAngleAxisToRotationMatrix(Rot[cam_ext_idx], R);
     extrinsics_dst[cam_ext_idx].block<3, 3>(0, 0) = R;
     extrinsics_dst[cam_ext_idx].block<3, 1>(0, 3) = T[cam_ext_idx];
   }
 }
-} // namespace core
+} // namespace optimization

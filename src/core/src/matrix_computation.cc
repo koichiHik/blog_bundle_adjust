@@ -14,7 +14,7 @@
 #include "hash.h"
 #include "matrix_computation.h"
 
-namespace core {
+namespace optimization {
 
 // Camera Parameters, total 11
 // tx, ty, tz, vx, vy, vz, fx, fy, cx, cy, s
@@ -334,4 +334,4 @@ void ComputeReprojectionErrorOnPointParameters(
   }
 }
 
-} // namespace core
+} // namespace optimization

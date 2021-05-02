@@ -9,7 +9,7 @@
 //
 #include "differential_operators.h"
 
-namespace core {
+namespace optimization {
 
 double ComputeTrialValues(double alpha_low, double alpha_high) {
 
@@ -224,4 +224,4 @@ void LineSearchWithBackTracking(
   alpha_star = alpha;
 }
 
-} // namespace core
+} // namespace optimization

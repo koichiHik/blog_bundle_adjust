@@ -16,7 +16,7 @@
 #include "derivative_v_second_with_angle_axis.h"
 #include "differential_operators.h"
 
-namespace core {
+namespace optimization {
 
 Eigen::MatrixXd
 MakeHessianPositiveDefiniteViaMultipleIdentity(const Eigen::MatrixXd &H,
@@ -3001,6 +3001,5 @@ ComputeHessian(const std::vector<Eigen::Matrix3d> &K,
   }
 
   return H;
-} // namespace core
-
-} // namespace core
+}
+} // namespace optimization

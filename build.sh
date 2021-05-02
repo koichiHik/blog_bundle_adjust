@@ -13,9 +13,6 @@ gflags_DIR="${DEP_DIR}/gflags/lib/cmake/gflags"
 glog_DIR="${DEP_DIR}/glog/lib/cmake/glog"
 gtest_DIR="${DEP_DIR}/gtest/lib"
 OpenCV_DIR="${DEP_DIR}/opencv/lib/cmake/opencv4"
-cereal_DIR="${DEP_DIR}/cereal/share/cmake/cereal"
-#PCL_DIR="${DEP_DIR}/pcl/share/pcl-1.11"
-leveldb_DIR="${DEP_DIR}/leveldb/lib/cmake/leveldb"
 Ceres_DIR="/usr/lib/cmake/Ceres"
 
 # Third party library. (Non CMAKE)
@@ -51,10 +48,6 @@ ${CMAKE_BIN} \
   -D Glog_DIR=${glog_DIR} \
   -D GTEST_ROOT=${gtest_DIR} \
   -D OpenCV_DIR=${OpenCV_DIR} \
-  -D cereal_DIR=${cereal_DIR} \
-  -D vlfeat_INCLUDE_DIR=${vlfeat_INCLUDE_DIR} \
-  -D vlfeat_LIBRARIES=${vlfeat_LIBRARIES} \
-  -D leveldb_DIR=${leveldb_DIR} \
   -D Ceres_DIR=${Ceres_DIR} \
   ../
 

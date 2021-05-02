@@ -20,7 +20,6 @@
 #include <common_def.h>
 #include <error_metric.h>
 #include <optimizations.h>
-#include <random_noise.h>
 #include <utility.h>
 
 DEFINE_string(camera_extrinsic_file_path, "", "");
@@ -29,7 +28,7 @@ DEFINE_string(image_location_file_path, "", "");
 DEFINE_string(points_location_path, "", "");
 DEFINE_string(result_save_dir, "", "");
 
-using namespace core;
+using namespace optimization;
 
 void ComputeCameraMatrix(const std::vector<Camera> &extrinsic_cams,
                          const std::map<size_t, size_t> &cam_intrinsic_map,
@@ -67,22 +66,22 @@ int main(int argc, char **argv) {
   std::vector<Eigen::Matrix3d> refined_intrinsics;
   std::vector<Eigen::Vector3d> refined_points3d;
   {
-    core::PureNewton().Optimize(noised_data.tracks, noised_data.extrinsic_cams,
-                                noised_data.intrinsic_cams,
-                                noised_data.extrinsic_intrinsic_map,
-                                noised_data.points3d, refined_extrinsics,
-                                refined_intrinsics, refined_points3d);
+    optimization::PureNewton().Optimize(
+        noised_data.tracks, noised_data.extrinsic_cams,
+        noised_data.intrinsic_cams, noised_data.extrinsic_intrinsic_map,
+        noised_data.points3d, refined_extrinsics, refined_intrinsics,
+        refined_points3d);
   }
 
   // X. Compute final reprojection error.
   {
     LOG(INFO) << "Reprojection Error (Final   Result) : "
-              << core::ComputeReprojectionError(
+              << optimization::ComputeReprojectionError(
                      noised_data.tracks, refined_intrinsics,
                      noised_data.extrinsic_intrinsic_map, refined_extrinsics,
                      refined_points3d);
     LOG(INFO) << "Average Reprojection Error (Final   Result) : "
-              << core::ComputeAverageReprojectionError(
+              << optimization::ComputeAverageReprojectionError(
                      noised_data.tracks, refined_intrinsics,
                      noised_data.extrinsic_intrinsic_map, refined_extrinsics,
                      refined_points3d);

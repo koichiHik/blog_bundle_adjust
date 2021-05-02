@@ -12,7 +12,7 @@
 // Original
 #include "common_def.h"
 
-namespace core {
+namespace optimization {
 
 void UpdateParameters(const Eigen::MatrixXd &delta_params,
                       const std::vector<Track> &tracks,
@@ -58,6 +58,6 @@ Eigen::MatrixXd
 MakeHessianPositiveDefiniteViaMultipleIdentity(const Eigen::MatrixXd &H,
                                                double multiple, double beta);
 
-} // namespace core
+} // namespace optimization
 
 #endif

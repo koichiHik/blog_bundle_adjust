@@ -9,7 +9,7 @@
 // Original
 #include "rotations.h"
 
-namespace core {
+namespace optimization {
 
 inline void ComputeInterimValues(const Eigen::Vector3d &T,
                                  const Eigen::Vector3d &rot,
@@ -29,6 +29,6 @@ inline void ComputeInterimValues(const Eigen::Vector3d &T,
   x = Proj * p.homogeneous();
 }
 
-} // namespace core
+} // namespace optimization
 
 #endif

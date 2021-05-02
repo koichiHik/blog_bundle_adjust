@@ -9,7 +9,7 @@
 #include "rotations.h"
 #include <optimizations.h>
 
-void core::CeresSolver::Optimize(
+void optimization::CeresSolver::Optimize(
     const std::vector<Track> &tracks, const std::vector<Camera> &extrinsics,
     const std::vector<Eigen::Matrix3d> &intrinsics,
     const std::map<size_t, size_t> &extrinsic_intrinsic_map,
@@ -37,7 +37,8 @@ void core::CeresSolver::Optimize(
   // X. Convert camera to R and T.
   for (size_t idx = 0; idx < extrinsics.size(); idx++) {
     const Camera &cam = extrinsics[idx];
-    core::ConvertRotationMatrixToAngleAxis(cam.block<3, 3>(0, 0), Rot_tmp[idx]);
+    optimization::ConvertRotationMatrixToAngleAxis(cam.block<3, 3>(0, 0),
+                                                   Rot_tmp[idx]);
     T_tmp[idx] = cam.block<3, 1>(0, 3);
   }
 
@@ -49,7 +50,7 @@ void core::CeresSolver::Optimize(
       if (tracks[trk_idx].count(cam_ext_idx)) {
         const Eigen::Vector2d meas = tracks[trk_idx].at(cam_ext_idx);
         ceres::CostFunction *cost_function =
-            core::CeresReprojError::Create(meas(0), meas(1));
+            optimization::CeresReprojError::Create(meas(0), meas(1));
 
         Eigen::Vector3d &point = points3d_tmp[trk_idx];
         Eigen::Vector3d &Rot = Rot_tmp[cam_ext_idx];
@@ -80,7 +81,7 @@ void core::CeresSolver::Optimize(
   extrinsics_dst.resize(extrinsics.size());
   for (size_t idx = 0; idx < T_tmp.size(); idx++) {
     Eigen::Matrix3d R_tmp;
-    core::ConvertAngleAxisToRotationMatrix(Rot_tmp[idx], R_tmp);
+    optimization::ConvertAngleAxisToRotationMatrix(Rot_tmp[idx], R_tmp);
     extrinsics_dst[idx].block<3, 3>(0, 0) = R_tmp;
     extrinsics_dst[idx].block<3, 1>(0, 3) = T_tmp[idx];
   }

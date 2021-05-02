@@ -13,7 +13,7 @@
 // Original
 #include <common_def.h>
 
-namespace core {
+namespace optimization {
 
 // Camera Parameters, total 11
 // tx, ty, tz, vx, vy, vz, fx, fy, cx, cy, s
@@ -119,6 +119,6 @@ void ComputeReprojectionErrorOnPointParameters(
         &conv_invs,
     std::vector<VectorReprojOnB *> &reproj_errs_on_params);
 
-} // namespace core
+} // namespace optimization
 
 #endif

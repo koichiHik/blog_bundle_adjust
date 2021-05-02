@@ -76,34 +76,34 @@ int main(int argc, char **argv) {
   {
     double tx = 0, ty = 0, tz = 0;
     double rx = 0, ry = 0, rz = 0;
-    R1_cam_to_org = core::ComputeRotationMatrixViaEulerXYZ(
+    R1_cam_to_org = optimization::ComputeRotationMatrixViaEulerXYZ(
                         rx / 180.0 * M_PI, ry / 180.0 * M_PI, rz / 180.0 * M_PI)
                         .transpose();
     T1_cam_to_org = -R1_cam_to_org * Eigen::Vector3d(tx, ty, tz);
     image_points2d_1 =
-        core::ProjectPoint(points3d, R1_cam_to_org, T1_cam_to_org, K1);
+        optimization::ProjectPoint(points3d, R1_cam_to_org, T1_cam_to_org, K1);
   }
 
   {
     double tx = 3, ty = 0, tz = 0;
     double rx = 0, ry = -30, rz = 0;
-    R2_cam_to_org = core::ComputeRotationMatrixViaEulerXYZ(
+    R2_cam_to_org = optimization::ComputeRotationMatrixViaEulerXYZ(
                         rx / 180.0 * M_PI, ry / 180.0 * M_PI, rz / 180.0 * M_PI)
                         .transpose();
     T2_cam_to_org = -R2_cam_to_org * Eigen::Vector3d(tx, ty, tz);
     image_points2d_2 =
-        core::ProjectPoint(points3d, R2_cam_to_org, T2_cam_to_org, K1);
+        optimization::ProjectPoint(points3d, R2_cam_to_org, T2_cam_to_org, K1);
   }
 
   {
     double tx = -3.0, ty = 0, tz = 1.0;
     double rx = 0, ry = 15, rz = 0;
-    R3_cam_to_org = core::ComputeRotationMatrixViaEulerXYZ(
+    R3_cam_to_org = optimization::ComputeRotationMatrixViaEulerXYZ(
                         rx / 180.0 * M_PI, ry / 180.0 * M_PI, rz / 180.0 * M_PI)
                         .transpose();
     T3_cam_to_org = -R3_cam_to_org * Eigen::Vector3d(tx, ty, tz);
     image_points2d_3 =
-        core::ProjectPoint(points3d, R3_cam_to_org, T3_cam_to_org, K2);
+        optimization::ProjectPoint(points3d, R3_cam_to_org, T3_cam_to_org, K2);
   }
 
   std::vector<cv::Scalar> colors{cv::Scalar(0, 0, 255), cv::Scalar(0, 255, 0),

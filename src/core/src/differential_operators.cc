@@ -16,7 +16,7 @@
 #include "derivative_v_second_with_angle_axis.h"
 #include "differential_operators.h"
 
-namespace core {
+namespace optimization {
 
 void UpdateParameters(const Eigen::MatrixXd &delta_params,
                       const std::vector<Track> &tracks,
@@ -498,4 +498,4 @@ ComputeJacobian(const std::vector<Eigen::Matrix3d> &K,
   return J;
 }
 
-} // namespace core
+} // namespace optimization

@@ -13,7 +13,6 @@ set(SRC_FILES
     src/error_metric.cc
     src/gradient_descent.cc
     src/pure_newton.cc
-    src/random_noise.cc
     src/differential_operators.cc
     src/compute_hessian.cc
     src/line_searches.cc
@@ -25,7 +24,6 @@ set(PUBLIC_HEADERS
     "include/bundle_adjust.h"
     "include/hash.h"
     "include/matrix_computation.h"
-    "include/random_noise.h"
 )
 
 add_library(${LIBRARY_NAME} SHARED ${SRC_FILES})

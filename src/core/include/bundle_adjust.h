@@ -14,7 +14,7 @@
 #include "hash.h"
 #include <common_def.h>
 
-namespace core {
+namespace optimization {
 
 class BundleAdjuster {
 public:
@@ -97,6 +97,6 @@ private:
   Eigen::Matrix<double, Eigen::Dynamic, 1> delta_, delta_A_, delta_B_;
 };
 
-} // namespace core
+} // namespace optimization
 
 #endif

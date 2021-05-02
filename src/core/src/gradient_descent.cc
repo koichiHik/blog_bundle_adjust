@@ -33,7 +33,7 @@ void PrintStatus(const std::string &msg, int loop_count, double grad_norm,
 }
 } // namespace
 
-namespace core {
+namespace optimization {
 
 void GradientDescent::Optimize(
     const std::vector<Track> &tracks_src,
@@ -54,7 +54,7 @@ void GradientDescent::Optimize(
   std::vector<Eigen::Vector3d> points3d_ = points3d_src;
   for (size_t cam_idx = 0; cam_idx < extrinsics_src.size(); cam_idx++) {
     T[cam_idx] = extrinsics_src[cam_idx].block<3, 1>(0, 3);
-    core::ConvertRotationMatrixToAngleAxis(
+    optimization::ConvertRotationMatrixToAngleAxis(
         extrinsics_src[cam_idx].block<3, 3>(0, 0), Rot[cam_idx]);
   }
 
@@ -65,14 +65,14 @@ void GradientDescent::Optimize(
   while (true) {
 
     // X. Compute gradient of reprojection error.
-    Eigen::MatrixXd grad = core::ComputeGradient(
+    Eigen::MatrixXd grad = optimization::ComputeGradient(
         K, T, Rot, points3d_, tracks_src, extrinsic_intrinsic_map_src);
 
     // X. Compute New and Old reprojection error.
-    double repj_old = core::ComputeReprojectionErrorWithStepLength(
+    double repj_old = optimization::ComputeReprojectionErrorWithStepLength(
         -grad, 0, tracks_src, K, T, Rot, points3d_,
         extrinsic_intrinsic_map_src);
-    double repj_new = core::ComputeReprojectionErrorWithStepLength(
+    double repj_new = optimization::ComputeReprojectionErrorWithStepLength(
         -grad, step, tracks_src, K, T, Rot, points3d_,
         extrinsic_intrinsic_map_src);
 
@@ -92,7 +92,7 @@ void GradientDescent::Optimize(
 
         // X. Compute new reprojection error.
         step *= 2.0;
-        repj_new = core::ComputeReprojectionErrorWithStepLength(
+        repj_new = optimization::ComputeReprojectionErrorWithStepLength(
             -grad, step, tracks_src, K, T, Rot, points3d_,
             extrinsic_intrinsic_map_src);
 
@@ -107,7 +107,7 @@ void GradientDescent::Optimize(
 
         // X. Compute new reprojection error.
         step *= 0.5;
-        repj_new = core::ComputeReprojectionErrorWithStepLength(
+        repj_new = optimization::ComputeReprojectionErrorWithStepLength(
             -grad, step, tracks_src, K, T, Rot, points3d_,
             extrinsic_intrinsic_map_src);
 
@@ -140,7 +140,7 @@ void GradientDescent::Optimize(
   extrinsics_dst.resize(T.size());
   for (size_t cam_ext_idx = 0; cam_ext_idx < T.size(); cam_ext_idx++) {
     Eigen::Matrix3d R;
-    core::ConvertAngleAxisToRotationMatrix(Rot[cam_ext_idx], R);
+    optimization::ConvertAngleAxisToRotationMatrix(Rot[cam_ext_idx], R);
     extrinsics_dst[cam_ext_idx].block<3, 3>(0, 0) = R;
     extrinsics_dst[cam_ext_idx].block<3, 1>(0, 3) = T[cam_ext_idx];
   }
@@ -165,7 +165,7 @@ void GradientDescentWithLineSearch::Optimize(
   std::vector<Eigen::Vector3d> points3d_ = points3d_src;
   for (size_t cam_idx = 0; cam_idx < extrinsics_src.size(); cam_idx++) {
     T[cam_idx] = extrinsics_src[cam_idx].block<3, 1>(0, 3);
-    core::ConvertRotationMatrixToAngleAxis(
+    optimization::ConvertRotationMatrixToAngleAxis(
         extrinsics_src[cam_idx].block<3, 3>(0, 0), Rot[cam_idx]);
   }
 
@@ -185,18 +185,18 @@ void GradientDescentWithLineSearch::Optimize(
                                alpha);
 
     // X. Reflect result from line search.
-    Eigen::MatrixXd grad = core::ComputeGradient(
+    Eigen::MatrixXd grad = optimization::ComputeGradient(
         K, T, Rot, points3d_, tracks_src, extrinsic_intrinsic_map_src);
     UpdateParameters(alpha * -grad, tracks_src, extrinsic_intrinsic_map_src, K,
                      T, Rot, points3d_);
 
     // X. Compute new gradient.
-    Eigen::MatrixXd new_grad = core::ComputeGradient(
+    Eigen::MatrixXd new_grad = optimization::ComputeGradient(
         K, T, Rot, points3d_, tracks_src, extrinsic_intrinsic_map_src);
 
     if (loop_count % 100 == 0 || new_grad.norm() < TERM_GRADIENT_NORM) {
       // X. Compute New and Old reprojection error.
-      double repj = core::ComputeReprojectionError(
+      double repj = optimization::ComputeReprojectionError(
           tracks_src, K, extrinsic_intrinsic_map_src, Rot, T, points3d_);
 
       if (TERM_GRADIENT_NORM < new_grad.norm()) {
@@ -221,10 +221,10 @@ void GradientDescentWithLineSearch::Optimize(
   extrinsics_dst.resize(T.size());
   for (size_t cam_ext_idx = 0; cam_ext_idx < T.size(); cam_ext_idx++) {
     Eigen::Matrix3d R;
-    core::ConvertAngleAxisToRotationMatrix(Rot[cam_ext_idx], R);
+    optimization::ConvertAngleAxisToRotationMatrix(Rot[cam_ext_idx], R);
     extrinsics_dst[cam_ext_idx].block<3, 3>(0, 0) = R;
     extrinsics_dst[cam_ext_idx].block<3, 1>(0, 3) = T[cam_ext_idx];
   }
 }
 
-} // namespace core
+} // namespace optimization

@@ -229,7 +229,7 @@ void LoadCameraExtrinsicMatrix(
 }
 
 void LoadTracks(const std::string &path, int cam_no,
-                std::vector<core::Track> &tracks) {
+                std::vector<optimization::Track> &tracks) {
 
   std::ifstream infile(path, std::ios::in);
   CHECK(infile.is_open()) << "File can not be opened.";
@@ -243,7 +243,7 @@ void LoadTracks(const std::string &path, int cam_no,
         << "Read point number is not cam_no * 2 : " << cam_no * 2;
 
     double scale = 1.0;
-    core::Track image_points;
+    optimization::Track image_points;
     for (size_t cam_idx = 0; cam_idx < static_cast<size_t>(cam_no); cam_idx++) {
       if (out[cam_idx * 2] != -1) {
         image_points.insert(std::make_pair(

@@ -11,7 +11,7 @@
 // X. Original
 #include <common_def.h>
 
-namespace core {
+namespace optimization {
 
 void LineSearchWithBackTracking(
     const std::vector<Track> &track_src,
@@ -102,6 +102,6 @@ public:
 private:
 };
 
-} // namespace core
+} // namespace optimization
 
 #endif

@@ -8,7 +8,7 @@
 // Eigen
 #include <Eigen/Core>
 
-namespace core {
+namespace optimization {
 
 using TrackId = size_t;
 using CameraId = size_t;
@@ -32,6 +32,6 @@ using VectorReprojOnA = Eigen::Matrix<double, kCameraParamsNum, 1>;
 using VectorReprojOnB = Eigen::Matrix<double, kPointParamsNum, 1>;
 using VectorForSchur = VectorReprojOnA;
 
-} // namespace core
+} // namespace optimization
 
 #endif

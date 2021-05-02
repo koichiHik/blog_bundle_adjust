@@ -11,7 +11,7 @@
 #include "rotations.h"
 #include <error_metric.h>
 
-namespace core {
+namespace optimization {
 
 double ComputeReprojectionErrorWithStepLength(
     const Eigen::MatrixXd &gradient, double step_length,
@@ -106,4 +106,4 @@ double ComputeAverageReprojectionError(
   return reproj_err / num;
 }
 
-} // namespace core
+} // namespace optimization

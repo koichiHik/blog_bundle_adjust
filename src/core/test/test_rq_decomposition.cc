@@ -30,7 +30,7 @@ TEST(RQ_DECOMP, NORMAL) {
       -0.00014574603756147602, -0.0005693070873097415, 0.012249358697517865;
 
   Eigen::Matrix3d K, R;
-  core::ComputeInternalCalibration(M, K, R);
+  optimization::ComputeInternalCalibration(M, K, R);
 
   double residue = (M.block<3, 3>(0, 0) - K * R).norm();
   CHECK(residue < 1e-10);
@@ -100,29 +100,29 @@ TEST(ANGLE_AXIS, CONVERT) {
          Eigen::AngleAxisd(rz, Eigen::Vector3d::UnitZ());
 
   Eigen::Vector3d angle_axis;
-  core::ConvertRotationMatrixToAngleAxis(R_in, angle_axis);
-  core::ConvertAngleAxisToRotationMatrix(angle_axis, R_out);
+  optimization::ConvertRotationMatrixToAngleAxis(R_in, angle_axis);
+  optimization::ConvertAngleAxisToRotationMatrix(angle_axis, R_out);
 
   CHECK((R_in - R_out).norm() < DBL_EPSILON * 100);
 }
 
 TEST(CALIB_DECOMP, TEST) {
 
-  core::Camera cam;
+  optimization::Camera cam;
   cam << 3.9923568756416135, 39.41768098301378, -0.7632898797149192,
       3.9591755089132286, -14.430231011327074, -0.9414415802377172,
       -27.450970108566686, -14.429433437768129, 0.012249240354938502,
       -0.00014574603756147602, -0.0005693070873097415, 0.012249358697517865;
 
   Eigen::Matrix3d K, R_in, R_out;
-  core::ComputeInternalCalibration(cam, K, R_in);
+  optimization::ComputeInternalCalibration(cam, K, R_in);
 
   // R_in.col(2) = -1 * R_in.col(2);
   LOG(INFO) << R_in.determinant();
 
   Eigen::Vector3d angle_axis;
-  core::ConvertRotationMatrixToAngleAxis(R_in, angle_axis);
-  core::ConvertAngleAxisToRotationMatrix(angle_axis, R_out);
+  optimization::ConvertRotationMatrixToAngleAxis(R_in, angle_axis);
+  optimization::ConvertAngleAxisToRotationMatrix(angle_axis, R_out);
 
   /*
   std::cout << R_in << std::endl;

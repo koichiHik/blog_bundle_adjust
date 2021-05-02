@@ -71,8 +71,8 @@ void ConvertFromOpenCVToPCL(const Eigen::Matrix3d &R_cv, Eigen::Matrix3d &R_pcl,
                             Eigen::Vector3d &T_pcl) {
 
   Eigen::Vector3d euler_cv = R_cv.eulerAngles(0, 1, 2);
-  R_pcl = core::ComputeRotationMatrixViaEulerXYZ(-euler_cv(0), -euler_cv(1),
-                                                 euler_cv(2));
+  R_pcl = optimization::ComputeRotationMatrixViaEulerXYZ(
+      -euler_cv(0), -euler_cv(1), euler_cv(2));
   T_pcl(0) = -T_cv(0);
   T_pcl(1) = -T_cv(1);
   T_pcl(2) = T_cv(2);

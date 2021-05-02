@@ -18,8 +18,8 @@
 #include "rotations.h"
 
 namespace {
-std::pair<core::TrackId, core::CameraId> CreateKey(core::TrackId track_idx,
-                                                   core::CameraId cam_idx) {
+std::pair<optimization::TrackId, optimization::CameraId>
+CreateKey(optimization::TrackId track_idx, optimization::CameraId cam_idx) {
   return std::make_pair(track_idx, cam_idx);
 }
 
@@ -33,7 +33,7 @@ void CreatePointerVector(std::vector<T> &buff, std::vector<T *> &pointer_buff) {
   }
 }
 
-void DecomposeCameras(std::vector<core::Camera *> &cameras,
+void DecomposeCameras(std::vector<optimization::Camera *> &cameras,
                       std::vector<Eigen::Matrix3d *> Ks,
                       std::vector<Eigen::Vector3d *> Ts,
                       std::vector<Eigen::Vector3d *> &Rots) {
@@ -41,27 +41,30 @@ void DecomposeCameras(std::vector<core::Camera *> &cameras,
   for (size_t cam_idx = 0; cam_idx < cameras.size(); cam_idx++) {
 
     Eigen::Matrix3d R;
-    core::DecomposeCameraMatrix(*cameras[cam_idx], *Ks[cam_idx], R,
-                                *Ts[cam_idx]);
+    optimization::DecomposeCameraMatrix(*cameras[cam_idx], *Ks[cam_idx], R,
+                                        *Ts[cam_idx]);
 
     /*
-    core::ComputeInternalCalibration(*cameras[cam_idx], *Ks[cam_idx], R);
+    optimization::ComputeInternalCalibration(*cameras[cam_idx], *Ks[cam_idx],
+    R);
     (*Ts[cam_idx]) = cameras[cam_idx]->block<3, 1>(0, 3);
     */
 
     // X. Convert to angle axis.
     Eigen::AngleAxisd axis(R);
-    core::ConvertRotationMatrixToAngleAxis(R, *Rots[cam_idx]);
+    optimization::ConvertRotationMatrixToAngleAxis(R, *Rots[cam_idx]);
   }
 }
 
-double SumReprojectionError(
-    const std::unordered_map<std::pair<core::TrackId, core::CameraId>,
-                             Eigen::Vector2d *> &reproj_error) {
+double
+SumReprojectionError(const std::unordered_map<
+                     std::pair<optimization::TrackId, optimization::CameraId>,
+                     Eigen::Vector2d *> &reproj_error) {
 
   double error_sum = 0;
-  using Map = const std::unordered_map<std::pair<core::TrackId, core::CameraId>,
-                                       Eigen::Vector2d *>;
+  using Map = const std::unordered_map<
+      std::pair<optimization::TrackId, optimization::CameraId>,
+      Eigen::Vector2d *>;
   for (Map::const_iterator citr = reproj_error.cbegin();
        citr != reproj_error.cend(); citr++) {
     error_sum += citr->second->norm();
@@ -71,7 +74,7 @@ double SumReprojectionError(
 
 } // namespace
 
-namespace core {
+namespace optimization {
 
 using namespace std;
 
@@ -384,4 +387,4 @@ void BundleAdjuster::UpdateParameters() {
   }
 }
 
-} // namespace core
+} // namespace optimization

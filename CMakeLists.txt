@@ -4,7 +4,6 @@ project(sfm_exp)
 
 cmake_policy(SET CMP0074 NEW)
 set(Boost_USE_RELEASE_LIBS ON)
-#set(Boost_USE_STATIC_LIBS ON)
 set(Boost_USE_STATIC_RUNTIME ON)
 
 # CMake Compile Option
@@ -27,10 +26,8 @@ find_package(Glog REQUIRED)
 find_package(GTest REQUIRED)
 find_package(OpenCV REQUIRED)
 find_package(Eigen3 REQUIRED)
-find_package(cereal REQUIRED)
 find_package(Ceres REQUIRED)
 find_package(PCL REQUIRED)
-find_package(leveldb REQUIRED)
 
 # Module directory.
 add_subdirectory(src/utility)

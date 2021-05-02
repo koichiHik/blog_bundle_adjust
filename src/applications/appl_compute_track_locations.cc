@@ -35,7 +35,7 @@ DEFINE_string(camera_file_path, "", "");
 DEFINE_string(image_location_file_path, "", "");
 DEFINE_string(points_location_path, "", "");
 
-using namespace core;
+using namespace optimization;
 
 int main(int argc, char **argv) {
   // X. Initial setting.
@@ -71,7 +71,7 @@ int main(int argc, char **argv) {
 
   std::vector<Camera> refined_cameras;
   std::vector<Eigen::Vector3d> refined_points;
-  core::BundleAdjuster(cameras, tracks, tri_points, refined_cameras,
+  optimization::BundleAdjuster(cameras, tracks, tri_points, refined_cameras,
                        refined_points);
 
   utility::WritePoints3D(FLAGS_points_location_path, tri_points);

@@ -9,7 +9,7 @@
 
 // Original
 
-namespace core {
+namespace optimization {
 
 struct CeresReprojError {
 
@@ -48,6 +48,6 @@ struct CeresReprojError {
   double observed_y_;
 };
 
-} // namespace core
+} // namespace optimization
 
 #endif

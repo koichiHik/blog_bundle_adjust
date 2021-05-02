@@ -11,7 +11,7 @@
 // X. Original
 #include <common_def.h>
 
-namespace core {
+namespace optimization {
 
 double ComputeReprojectionErrorWithStepLength(
     const Eigen::MatrixXd &gradient, double step_length,
@@ -44,6 +44,6 @@ double ComputeAverageReprojectionError(
     const std::vector<Camera> &extrinsics,
     const std::vector<Eigen::Vector3d> &points3d);
 
-} // namespace core
+} // namespace optimization
 
 #endif

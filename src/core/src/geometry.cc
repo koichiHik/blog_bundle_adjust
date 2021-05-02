@@ -18,7 +18,7 @@
 // X. Original
 #include "geometry.h"
 
-namespace core {
+namespace optimization {
 
 void PrintMatrix(const Eigen::Matrix3d &m) {
 
@@ -189,4 +189,4 @@ ProjectPoint(std::vector<Eigen::Vector3d> &points3d, Eigen::Matrix3d &R,
   return points2d;
 }
 
-} // namespace core
+} // namespace optimization

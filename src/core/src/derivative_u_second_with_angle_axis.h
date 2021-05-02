@@ -15,7 +15,7 @@
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wunused-variable"
-namespace core {
+namespace optimization {
 
 /***************************************************************/
 /********************** Derivative U ***************************/
@@ -17621,7 +17621,7 @@ inline double du2_dvzdvz(const Eigen::Vector3d &T, const Eigen::Vector3d &rot,
   }
 }
 
-} // namespace core
+} // namespace optimization
 
 #pragma GCC diagnostic pop
 

@@ -20,7 +20,6 @@
 #include <common_def.h>
 #include <error_metric.h>
 #include <optimizations.h>
-#include <random_noise.h>
 #include <utility.h>
 
 DEFINE_string(camera_extrinsic_file_path, "", "");
@@ -29,7 +28,7 @@ DEFINE_string(image_location_file_path, "", "");
 DEFINE_string(points_location_path, "", "");
 DEFINE_string(result_save_dir, "", "");
 
-using namespace core;
+using namespace optimization;
 
 int main(int argc, char **argv) {
 
@@ -56,8 +55,8 @@ int main(int argc, char **argv) {
   // X. Compute Jacobian.
   SfmData refined_data(noised_data);
   {
-    // core::GradientDescent().Optimize(
-    core::GradientDescentWithLineSearch().Optimize(
+    // optimization::GradientDescent().Optimize(
+    optimization::GradientDescentWithLineSearch().Optimize(
         noised_data.tracks, noised_data.extrinsic_cams,
         noised_data.intrinsic_cams, noised_data.extrinsic_intrinsic_map,
         noised_data.points3d, refined_data.extrinsic_cams,
@@ -75,12 +74,12 @@ int main(int argc, char **argv) {
   // X. Compute final reprojection error.
   {
     LOG(INFO) << "Reprojection Error (Final   Result) : "
-              << core::ComputeReprojectionError(
+              << optimization::ComputeReprojectionError(
                      refined_data.tracks, refined_data.intrinsic_cams,
                      refined_data.extrinsic_intrinsic_map,
                      refined_data.extrinsic_cams, refined_data.points3d);
     LOG(INFO) << "Average Reprojection Error (Final   Result) : "
-              << core::ComputeAverageReprojectionError(
+              << optimization::ComputeAverageReprojectionError(
                      refined_data.tracks, refined_data.intrinsic_cams,
                      refined_data.extrinsic_intrinsic_map,
                      refined_data.extrinsic_cams, refined_data.points3d);

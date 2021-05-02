@@ -39,7 +39,7 @@ void LoadCameraExtrinsicMatrix(
     const std::string &path, std::vector<Eigen::Matrix<double, 3, 4>> &cameras);
 
 void LoadTracks(const std::string &path, int cam_no,
-                std::vector<core::Track> &tracks);
+                std::vector<optimization::Track> &tracks);
 
 } // namespace utility
 
