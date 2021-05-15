@@ -1,23 +1,6 @@
 #!/bin/bash
 
-# Install directory is relative to this script.
-TOP_DIR=$(cd $(dirname $0); pwd)
-INSTALL_DIR="${TOP_DIR}/install"
-DEP_DIR="/home/koichi/private_ws/3rdParty/install"
-
-# CMake path.
-CMAKE_BIN="${DEP_DIR}/cmake/bin/cmake"
-
-# Third party library.
-gflags_DIR="${DEP_DIR}/gflags/lib/cmake/gflags"
-glog_DIR="${DEP_DIR}/glog/lib/cmake/glog"
-gtest_DIR="${DEP_DIR}/gtest/lib"
-OpenCV_DIR="${DEP_DIR}/opencv/lib/cmake/opencv4"
-Ceres_DIR="/usr/lib/cmake/Ceres"
-
-# Third party library. (Non CMAKE)
-vlfeat_INCLUDE_DIR="${DEP_DIR}/vlfeat/include"
-vlfeat_LIBRARIES="${DEP_DIR}/vlfeat/lib/libvl.so"
+source "$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )/build_env.sh"
 
 # Build setting.
 CMAKE_BUILD_TYPE=Release
@@ -32,14 +15,10 @@ fi
 
 cd build
 
-#  -D PCL_DIR=${PCL_DIR} \
-
-
 ${CMAKE_BIN} \
   -D CMAKE_C_COMPILER=gcc-9 \
   -D CMAKE_CXX_COMPILER=g++-9 \
   -D CMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} \
-  -D CMAKE_CONFIGURATION_TYPES=${CMAKE_BUILD_TYPE} \
   -D CMAKE_INSTALL_PREFIX=${INSTALL_DIR} \
   -D CMAKE_VERBOSE_MAKEFILE=FALSE \
   -D COMPILER_WARNING=${COMPILER_WARNING} \
@@ -51,6 +30,6 @@ ${CMAKE_BIN} \
   -D Ceres_DIR=${Ceres_DIR} \
   ../
 
-make install -j4 && bash ${TOP_DIR}/script/run_unit_test.sh
+make install -j4
 
-cd ${TOP_DIR}
+cd ${PROJECT_DIR}
