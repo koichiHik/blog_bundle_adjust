@@ -3,27 +3,6 @@ cmake_minimum_required(VERSION 3.8)
 project(sfm_exp)
 
 #############################
-# Construct track locations.
-#############################
-set(APP_NAME appl_compute_track_locations)
-add_executable(${APP_NAME}
-    appl_compute_track_locations.cc)
-target_include_directories(${APP_NAME} PUBLIC
-    ${EIGEN3_INCLUDE_DIR}
-    ${PCL_INCLUDE_DIRS}
-)
-target_link_libraries(${APP_NAME} PUBLIC
-    optimization
-    utility
-    glog::glog
-    ${GFLAGS_LIBRARIES}
-    ${OpenCV_LIBS}
-    ${PCL_VISUALIZATION_LIBRARIES}
-)
-install(TARGETS ${APP_NAME} 
-    RUNTIME DESTINATION bin)
-
-#############################
 # Construct Artificial Data.
 #############################
 set(APP_NAME appl_create_artificial_data)

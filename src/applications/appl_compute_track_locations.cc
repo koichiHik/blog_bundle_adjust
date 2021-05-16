@@ -37,7 +37,7 @@ DEFINE_string(points_location_path, "", "");
 
 using namespace optimization;
 
-int main(int argc, char **argv) {
+int main(int argc, char** argv) {
   // X. Initial setting.
   google::ParseCommandLineFlags(&argc, &argv, true);
   FLAGS_alsologtostderr = 1;
@@ -47,8 +47,6 @@ int main(int argc, char **argv) {
   LOG(INFO) << "Compute track locations";
   LOG(INFO) << "Camera File Path : " << FLAGS_camera_file_path;
   LOG(INFO) << "Image Location File Path : " << FLAGS_image_location_file_path;
-
-#if 0
 
   std::vector<Camera> cameras;
   utility::LoadCameraMatrixMap(FLAGS_camera_file_path, cameras);
@@ -72,13 +70,12 @@ int main(int argc, char **argv) {
   std::vector<Camera> refined_cameras;
   std::vector<Eigen::Vector3d> refined_points;
   optimization::BundleAdjuster(cameras, tracks, tri_points, refined_cameras,
-                       refined_points);
+                               refined_points);
 
   utility::WritePoints3D(FLAGS_points_location_path, tri_points);
 
   pcl::PointCloud<pcl::PointXYZRGB> cloud;
-  for (const auto &p : tri_points) {
-
+  for (const auto& p : tri_points) {
     pcl::PointXYZRGB pcl_p;
     pcl_p.x = p(0);
     pcl_p.y = p(1);
@@ -93,7 +90,6 @@ int main(int argc, char **argv) {
   viewer.addPointCloud(cloud.makeShared(), "cloud");
   viewer.addCoordinateSystem(0.2);
   viewer.spin();
-#endif
 
   return 0;
 }

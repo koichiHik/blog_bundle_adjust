@@ -21,7 +21,7 @@
 #include "rotations.h"
 
 namespace {
-void PrintStatus(const std::string &msg, int loop_count, double grad_norm,
+void PrintStatus(const std::string& msg, int loop_count, double grad_norm,
                  double step_size, double repj_err, double term_grad_norm,
                  double term_step_length) {
   LOG(INFO) << std::endl << msg;
@@ -31,20 +31,19 @@ void PrintStatus(const std::string &msg, int loop_count, double grad_norm,
             << term_step_length;
   LOG(INFO) << "Reprojection Error : " << repj_err;
 }
-} // namespace
+}  // namespace
 
 namespace optimization {
 
 void GradientDescent::Optimize(
-    const std::vector<Track> &tracks_src,
-    const std::vector<Camera> &extrinsics_src,
-    const std::vector<Eigen::Matrix3d> &intrinsics_src,
-    const std::map<size_t, size_t> &extrinsic_intrinsic_map_src,
-    const std::vector<Eigen::Vector3d> &points3d_src,
-    std::vector<Camera> &extrinsics_dst,
-    std::vector<Eigen::Matrix3d> &intrinsics_dst,
-    std::vector<Eigen::Vector3d> &points3d_dst) {
-
+    const std::vector<Track>& tracks_src,
+    const std::vector<Camera>& extrinsics_src,
+    const std::vector<Eigen::Matrix3d>& intrinsics_src,
+    const std::map<size_t, size_t>& extrinsic_intrinsic_map_src,
+    const std::vector<Eigen::Vector3d>& points3d_src,
+    std::vector<Camera>& extrinsics_dst,
+    std::vector<Eigen::Matrix3d>& intrinsics_dst,
+    std::vector<Eigen::Vector3d>& points3d_dst) {
   // X. Decompose camera matrix.
   std::vector<Eigen::Matrix3d> K = intrinsics_src;
   std::vector<Eigen::Vector3d> T(extrinsics_src.size(),
@@ -63,7 +62,6 @@ void GradientDescent::Optimize(
   double step = INITIAL_STEP;
   double last_repj_err;
   while (true) {
-
     // X. Compute gradient of reprojection error.
     Eigen::MatrixXd grad = optimization::ComputeGradient(
         K, T, Rot, points3d_, tracks_src, extrinsic_intrinsic_map_src);
@@ -104,7 +102,6 @@ void GradientDescent::Optimize(
       }
     } else {
       while (true) {
-
         // X. Compute new reprojection error.
         step *= 0.5;
         repj_new = optimization::ComputeReprojectionErrorWithStepLength(
@@ -147,15 +144,14 @@ void GradientDescent::Optimize(
 }
 
 void GradientDescentWithLineSearch::Optimize(
-    const std::vector<Track> &tracks_src,
-    const std::vector<Camera> &extrinsics_src,
-    const std::vector<Eigen::Matrix3d> &intrinsics_src,
-    const std::map<size_t, size_t> &extrinsic_intrinsic_map_src,
-    const std::vector<Eigen::Vector3d> &points3d_src,
-    std::vector<Camera> &extrinsics_dst,
-    std::vector<Eigen::Matrix3d> &intrinsics_dst,
-    std::vector<Eigen::Vector3d> &points3d_dst) {
-
+    const std::vector<Track>& tracks_src,
+    const std::vector<Camera>& extrinsics_src,
+    const std::vector<Eigen::Matrix3d>& intrinsics_src,
+    const std::map<size_t, size_t>& extrinsic_intrinsic_map_src,
+    const std::vector<Eigen::Vector3d>& points3d_src,
+    std::vector<Camera>& extrinsics_dst,
+    std::vector<Eigen::Matrix3d>& intrinsics_dst,
+    std::vector<Eigen::Vector3d>& points3d_dst) {
   // X. Decompose camera matrix.
   std::vector<Eigen::Matrix3d> K = intrinsics_src;
   std::vector<Eigen::Vector3d> T(extrinsics_src.size(),
@@ -173,16 +169,15 @@ void GradientDescentWithLineSearch::Optimize(
   int loop_count = 0;
   double alpha = 0;
   while (true) {
-
     // X. Solve line search for the gradient direction.
-    /*
-    LineSearchWithStrongWolfe(tracks_src, K, T, Rot, points3d_,
-                              extrinsic_intrinsic_map_src, 100, 1000, 0.001,
-                              0.9, alpha);
-    */
-    LineSearchWithBackTracking(tracks_src, K, T, Rot, points3d_,
-                               extrinsic_intrinsic_map_src, 100, 0.75, 1.0,
-                               alpha);
+    bool line_search_success = LineSearchWithStrongWolfe(
+        tracks_src, K, T, Rot, points3d_, extrinsic_intrinsic_map_src,
+        LINE_SEARCH_MAX_ITR, LINE_SEARCH_MIN_STEP, LINE_SEARCH_ALPHA_MAX,
+        LINE_SEARCH_C1, LINE_SEARCH_C2, alpha);
+    if (!line_search_success) {
+      LOG(INFO) << "Line search did not converge. Optimization failed.";
+      break;
+    }
 
     // X. Reflect result from line search.
     Eigen::MatrixXd grad = optimization::ComputeGradient(
@@ -194,7 +189,7 @@ void GradientDescentWithLineSearch::Optimize(
     Eigen::MatrixXd new_grad = optimization::ComputeGradient(
         K, T, Rot, points3d_, tracks_src, extrinsic_intrinsic_map_src);
 
-    if (loop_count % 100 == 0 || new_grad.norm() < TERM_GRADIENT_NORM) {
+    if (loop_count % 1000 == 0 || new_grad.norm() < TERM_GRADIENT_NORM) {
       // X. Compute New and Old reprojection error.
       double repj = optimization::ComputeReprojectionError(
           tracks_src, K, extrinsic_intrinsic_map_src, Rot, T, points3d_);
@@ -227,4 +222,4 @@ void GradientDescentWithLineSearch::Optimize(
   }
 }
 
-} // namespace optimization
+}  // namespace optimization
