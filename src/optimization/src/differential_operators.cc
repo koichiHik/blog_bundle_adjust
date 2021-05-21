@@ -18,19 +18,17 @@
 
 namespace optimization {
 
-void UpdateParameters(const Eigen::MatrixXd &delta_params,
-                      const std::vector<Track> &tracks,
-                      const std::map<size_t, size_t> &extrinsic_intrinsic_map,
-                      std::vector<Eigen::Matrix3d> &K,
-                      std::vector<Eigen::Vector3d> &T,
-                      std::vector<Eigen::Vector3d> &Rot,
-                      std::vector<Eigen::Vector3d> &points3d) {
-
+void UpdateParameters(const Eigen::MatrixXd& delta_params,
+                      const std::vector<Track>& tracks,
+                      const std::map<size_t, size_t>& extrinsic_intrinsic_map,
+                      std::vector<Eigen::Matrix3d>& K,
+                      std::vector<Eigen::Vector3d>& T,
+                      std::vector<Eigen::Vector3d>& Rot,
+                      std::vector<Eigen::Vector3d>& points3d) {
   // X. Update camera extrinsics.
   size_t cam_ext_num = T.size();
-  size_t cam_ext_var_num = 6;
   for (size_t cam_ext_idx = 0; cam_ext_idx < cam_ext_num; cam_ext_idx++) {
-    size_t idx = cam_ext_idx * cam_ext_var_num;
+    size_t idx = cam_ext_idx * kCameraExtrinsicParamsNum;
 
     // X. Camera translation.
     T[cam_ext_idx](0) += delta_params(idx, 0);
@@ -45,9 +43,9 @@ void UpdateParameters(const Eigen::MatrixXd &delta_params,
 
   // X. Update camera intrinsics.
   size_t cam_int_num = K.size();
-  size_t cam_int_var_num = 5;
   for (size_t cam_int_idx = 0; cam_int_idx < cam_int_num; cam_int_idx++) {
-    size_t idx = cam_ext_num * cam_ext_var_num + cam_int_idx * cam_int_var_num;
+    size_t idx = cam_ext_num * kCameraExtrinsicParamsNum +
+                 cam_int_idx * kCameraIntrinsicParamsNum;
 
     // X. Camera intrinsic.
     K[cam_int_idx](0, 0) += delta_params(idx, 0);
@@ -61,27 +59,27 @@ void UpdateParameters(const Eigen::MatrixXd &delta_params,
   size_t trk_num = tracks.size();
   size_t trk_var_num = 3;
   for (size_t trk_idx = 0; trk_idx < trk_num; trk_idx++) {
-    size_t idx = trk_var_num * trk_idx + cam_ext_num * cam_ext_var_num +
-                 cam_int_num * cam_int_var_num;
+    size_t idx = trk_var_num * trk_idx +
+                 cam_ext_num * kCameraExtrinsicParamsNum +
+                 cam_int_num * kCameraIntrinsicParamsNum;
     points3d[trk_idx](0) += delta_params(idx, 0);
     points3d[trk_idx](1) += delta_params(idx + 1, 0);
     points3d[trk_idx](2) += delta_params(idx + 2, 0);
   }
 }
 
-Eigen::MatrixXd
-ComputeResidualVector(const std::vector<Eigen::Matrix3d> &K,
-                      const std::vector<Eigen::Vector3d> &T,
-                      const std::vector<Eigen::Vector3d> &Rot,
-                      const std::vector<Eigen::Vector3d> &points3d,
-                      const std::vector<Track> &tracks,
-                      const std::map<size_t, size_t> &extrinsic_intrinsic_map) {
-
+Eigen::MatrixXd ComputeResidualVector(
+    const std::vector<Eigen::Matrix3d>& K,
+    const std::vector<Eigen::Vector3d>& T,
+    const std::vector<Eigen::Vector3d>& Rot,
+    const std::vector<Eigen::Vector3d>& points3d,
+    const std::vector<Track>& tracks,
+    const std::map<size_t, size_t>& extrinsic_intrinsic_map) {
   // X. Prepare buffer.
   size_t cam_ext_num = T.size();
   size_t track_num = tracks.size();
   size_t projected_pnt_num = 0;
-  for (const Track &track : tracks) {
+  for (const Track& track : tracks) {
     projected_pnt_num += track.size();
   }
   Eigen::MatrixXd res = Eigen::MatrixXd::Zero(projected_pnt_num * 2, 1);
@@ -89,7 +87,6 @@ ComputeResidualVector(const std::vector<Eigen::Matrix3d> &K,
   // X. Compose camera matrix.
   std::vector<Camera> cameras;
   for (size_t cam_ext_idx = 0; cam_ext_idx < cam_ext_num; cam_ext_idx++) {
-
     // X. Create rotation matrix.
     Eigen::Matrix3d R;
     ConvertAngleAxisToRotationMatrix(Rot[cam_ext_idx], R);
@@ -123,14 +120,39 @@ ComputeResidualVector(const std::vector<Eigen::Matrix3d> &K,
   return res;
 }
 
-Eigen::MatrixXd
-ComputeGradient(const std::vector<Eigen::Matrix3d> &K,
-                const std::vector<Eigen::Vector3d> &T,
-                const std::vector<Eigen::Vector3d> &Rot,
-                const std::vector<Eigen::Vector3d> &points3d,
-                const std::vector<Track> &tracks,
-                const std::map<size_t, size_t> &extrinsic_intrinsic_map) {
+Eigen::MatrixXd CreateGaugeFixMatrix(size_t num_params, size_t num_gauge_group,
+                                     const std::vector<size_t>& gauge_indices) {
+  CHECK(gauge_indices.size() == num_gauge_group)
+      << "Number of fix gauge indices is different from num_gauge_group";
 
+  size_t original_param_num = num_params;
+  size_t reduced_param_num = num_params - num_gauge_group;
+
+  std::vector<size_t> sorted_indices(gauge_indices);
+  std::sort(sorted_indices.begin(), sorted_indices.end());
+
+  Eigen::MatrixXd Y = Eigen::MatrixXd::Zero(num_params, reduced_param_num);
+
+  size_t col = 0;
+  for (size_t row = 0; row < Y.rows(); row++) {
+    if (0 < sorted_indices.size() && *sorted_indices.begin() == row) {
+      sorted_indices.erase(sorted_indices.begin());
+      continue;
+    }
+    Y(row, col) = 1.0;
+    col++;
+  }
+
+  return Y;
+}
+
+Eigen::MatrixXd ComputeGradient(
+    const std::vector<Eigen::Matrix3d>& K,
+    const std::vector<Eigen::Vector3d>& T,
+    const std::vector<Eigen::Vector3d>& Rot,
+    const std::vector<Eigen::Vector3d>& points3d,
+    const std::vector<Track>& tracks,
+    const std::map<size_t, size_t>& extrinsic_intrinsic_map) {
   CHECK(points3d.size() == tracks.size())
       << "Number of points and tracks must be the same.";
 
@@ -139,17 +161,14 @@ ComputeGradient(const std::vector<Eigen::Matrix3d> &K,
   size_t cam_int_num = K.size();
   size_t track_num = tracks.size();
 
-  size_t cam_ext_var_num = 6;
-  size_t cam_int_var_num = 5;
-  size_t points_var_num = 3;
-  size_t len = cam_ext_var_num * cam_ext_num + cam_int_var_num * cam_int_num +
-               points_var_num * track_num;
+  size_t len = kCameraExtrinsicParamsNum * cam_ext_num +
+               kCameraIntrinsicParamsNum * cam_int_num +
+               kPointParamsNum * track_num;
   Eigen::MatrixXd grad(len, 1);
   grad.setZero();
 
   std::vector<Camera> cameras;
   for (size_t cam_ext_idx = 0; cam_ext_idx < cam_ext_num; cam_ext_idx++) {
-
     // X. Create rotation matrix.
     Eigen::Matrix3d R;
     ConvertAngleAxisToRotationMatrix(Rot[cam_ext_idx], R);
@@ -164,12 +183,9 @@ ComputeGradient(const std::vector<Eigen::Matrix3d> &K,
 
   // X. Gradient for camera extrinsic part.
   for (size_t cam_ext_idx = 0; cam_ext_idx < cam_ext_num; cam_ext_idx++) {
-
     for (size_t trk_idx = 0; trk_idx < track_num; trk_idx++) {
-
       // X. Only visible track.
       if (tracks[trk_idx].count(cam_ext_idx)) {
-
         Eigen::Vector2d meas = tracks[trk_idx].at(cam_ext_idx);
         Eigen::Vector3d x =
             cameras[cam_ext_idx] * points3d[trk_idx].homogeneous();
@@ -180,8 +196,7 @@ ComputeGradient(const std::vector<Eigen::Matrix3d> &K,
 
         size_t cam_int_idx = extrinsic_intrinsic_map.at(cam_ext_idx);
         {
-#if 1
-          size_t col_idx = cam_ext_idx * cam_ext_var_num;
+          size_t col_idx = cam_ext_idx * kCameraExtrinsicParamsNum;
           grad(col_idx, 0) +=
               u_res * du_dtx(T[cam_ext_idx], Rot[cam_ext_idx], K[cam_int_idx],
                              points3d[trk_idx], x) +
@@ -217,15 +232,13 @@ ComputeGradient(const std::vector<Eigen::Matrix3d> &K,
                              points3d[trk_idx], x) +
               v_res * dv_dvz(T[cam_ext_idx], Rot[cam_ext_idx], K[cam_int_idx],
                              points3d[trk_idx], x);
-
-#endif
         }
 
         // X. Gradient for camera intrinsic part.
         {
           double scale = 1.0;
-          size_t col_idx =
-              cam_ext_num * cam_ext_var_num + cam_int_idx * cam_int_var_num;
+          size_t col_idx = cam_ext_num * kCameraExtrinsicParamsNum +
+                           cam_int_idx * kCameraIntrinsicParamsNum;
           grad(col_idx, 0) +=
               scale * (u_res * du_dfx(T[cam_ext_idx], Rot[cam_ext_idx],
                                       K[cam_int_idx], points3d[trk_idx], x) +
@@ -258,10 +271,9 @@ ComputeGradient(const std::vector<Eigen::Matrix3d> &K,
         }
         // X. Gradient for point part.
         {
-#if 1
-          size_t col_idx = cam_ext_num * cam_ext_var_num +
-                           cam_int_num * cam_int_var_num +
-                           trk_idx * points_var_num;
+          size_t col_idx = cam_ext_num * kCameraExtrinsicParamsNum +
+                           cam_int_num * kCameraIntrinsicParamsNum +
+                           trk_idx * kPointParamsNum;
 
           grad(col_idx, 0) +=
               u_res * du_dX(T[cam_ext_idx], Rot[cam_ext_idx], K[cam_int_idx],
@@ -280,7 +292,6 @@ ComputeGradient(const std::vector<Eigen::Matrix3d> &K,
                             points3d[trk_idx], x) +
               v_res * dv_dZ(T[cam_ext_idx], Rot[cam_ext_idx], K[cam_int_idx],
                             points3d[trk_idx], x);
-#endif
         }
       }
     }
@@ -295,21 +306,20 @@ ComputeGradient(const std::vector<Eigen::Matrix3d> &K,
     grad(cam_ext_idx + 4, 0) = 0.0;
     grad(cam_ext_idx + 5, 0) = 0.0;
 
-    size_t cam_2nd_idx = cam_ext_var_num;
+    size_t cam_2nd_idx = kCameraExtrinsicParamsNum;
     grad(cam_2nd_idx, 0) = 0.0;
   }
 
   return grad;
 }
 
-Eigen::MatrixXd
-ComputeJacobian(const std::vector<Eigen::Matrix3d> &K,
-                const std::vector<Eigen::Vector3d> &T,
-                const std::vector<Eigen::Vector3d> &Rot,
-                const std::vector<Eigen::Vector3d> &points3d,
-                const std::vector<Track> &tracks,
-                const std::map<size_t, size_t> &extrinsic_intrinsic_map) {
-
+Eigen::MatrixXd ComputeJacobian(
+    const std::vector<Eigen::Matrix3d>& K,
+    const std::vector<Eigen::Vector3d>& T,
+    const std::vector<Eigen::Vector3d>& Rot,
+    const std::vector<Eigen::Vector3d>& points3d,
+    const std::vector<Track>& tracks,
+    const std::map<size_t, size_t>& extrinsic_intrinsic_map) {
   CHECK(points3d.size() == tracks.size())
       << "Number of points and tracks must be the same.";
 
@@ -318,24 +328,19 @@ ComputeJacobian(const std::vector<Eigen::Matrix3d> &K,
   size_t cam_int_num = K.size();
   size_t track_num = tracks.size();
   size_t projected_pnt_num = 0;
-  for (const Track &track : tracks) {
+  for (const Track& track : tracks) {
     projected_pnt_num += track.size();
   }
 
-  // X. Variable count.
-  size_t cam_ext_var_num = 6;
-  size_t cam_int_var_num = 5;
-  size_t points_var_num = 3;
-
   // X. Prepare buffer.
   size_t j_row = projected_pnt_num * 2;
-  size_t j_col = cam_ext_num * cam_ext_var_num + cam_int_num * cam_int_var_num +
-                 track_num * points_var_num;
+  size_t j_col = cam_ext_num * kCameraExtrinsicParamsNum +
+                 cam_int_num * kCameraIntrinsicParamsNum +
+                 track_num * kPointParamsNum;
   Eigen::MatrixXd J = Eigen::MatrixXd::Zero(j_row, j_col);
 
   std::vector<Camera> cameras;
   for (size_t cam_ext_idx = 0; cam_ext_idx < cam_ext_num; cam_ext_idx++) {
-
     // X. Create rotation matrix.
     Eigen::Matrix3d R;
     ConvertAngleAxisToRotationMatrix(Rot[cam_ext_idx], R);
@@ -351,18 +356,15 @@ ComputeJacobian(const std::vector<Eigen::Matrix3d> &K,
   // X. Compute jacobian.
   size_t row_idx = 0;
   for (size_t trk_idx = 0; trk_idx < track_num; trk_idx++) {
-
     for (size_t cam_ext_idx = 0; cam_ext_idx < cam_ext_num; cam_ext_idx++) {
-
       // X. Only visible track.
       if (tracks[trk_idx].count(cam_ext_idx)) {
-
         Eigen::Vector3d x =
             cameras[cam_ext_idx] * points3d[trk_idx].homogeneous();
 
         // X. Compute extrinsic dependency.
         {
-          size_t col_idx = cam_ext_idx * cam_ext_var_num;
+          size_t col_idx = cam_ext_idx * kCameraExtrinsicParamsNum;
           size_t cam_int_idx = extrinsic_intrinsic_map.at(cam_ext_idx);
 
           // X. tx
@@ -415,8 +417,8 @@ ComputeJacobian(const std::vector<Eigen::Matrix3d> &K,
         // X. Compute intrinsic dependency
         {
           size_t cam_int_idx = extrinsic_intrinsic_map.at(cam_ext_idx);
-          size_t col_idx =
-              cam_ext_num * cam_ext_var_num + cam_int_idx * cam_int_var_num;
+          size_t col_idx = cam_ext_num * kCameraExtrinsicParamsNum +
+                           cam_int_idx * kCameraIntrinsicParamsNum;
 
           // X. fx
           J(row_idx, col_idx) = du_dfx(T[cam_ext_idx], Rot[cam_ext_idx],
@@ -459,9 +461,9 @@ ComputeJacobian(const std::vector<Eigen::Matrix3d> &K,
 
         // X. Compute point coords dependency.
         {
-          size_t col_idx = cam_ext_num * cam_ext_var_num +
-                           cam_int_num * cam_int_var_num +
-                           trk_idx * points_var_num;
+          size_t col_idx = cam_ext_num * kCameraExtrinsicParamsNum +
+                           cam_int_num * kCameraIntrinsicParamsNum +
+                           trk_idx * kPointParamsNum;
 
           size_t cam_int_idx = extrinsic_intrinsic_map.at(cam_ext_idx);
 
@@ -498,4 +500,4 @@ ComputeJacobian(const std::vector<Eigen::Matrix3d> &K,
   return J;
 }
 
-} // namespace optimization
+}  // namespace optimization

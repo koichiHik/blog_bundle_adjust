@@ -8,8 +8,8 @@ set(LIBRARY_NAME optimization)
 ################################
 set(SRC_FILES
     src/geometry.cc
-    src/bundle_adjust.cc
-    src/matrix_computation.cc
+    #src/bundle_adjust.cc
+    #src/matrix_computation.cc
     src/error_metric.cc
     src/gradient_descent.cc
     src/pure_newton.cc
@@ -21,9 +21,6 @@ set(SRC_FILES
 set(PUBLIC_HEADERS
     "include/geometry.h"
     "include/common_def.h"
-    "include/bundle_adjust.h"
-    "include/hash.h"
-    "include/matrix_computation.h"
 )
 
 add_library(${LIBRARY_NAME} SHARED ${SRC_FILES})

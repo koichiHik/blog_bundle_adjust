@@ -21,12 +21,14 @@ bool Zoom(const std::vector<Track>& tracks_src,
           const std::vector<Eigen::Vector3d>& Rot_src,
           const std::vector<Eigen::Vector3d>& points3d_src,
           const std::map<size_t, size_t>& extrinsic_intrinsic_map,
-          double alpha_low, double alpha_high, double c1, double c2,
-          size_t max_itr, double min_step, double& alpha_star) {
+          const Eigen::MatrixXd& gauge_fix_matrix, double alpha_low,
+          double alpha_high, double c1, double c2, size_t max_itr,
+          double min_step, double& alpha_star) {
   // X. Compute base value & base gradient.
   double phi_0 = ComputeReprojectionError(
       tracks_src, K_src, extrinsic_intrinsic_map, Rot_src, T_src, points3d_src);
-  Eigen::MatrixXd grad_0 = ComputeGradient(K_src, T_src, Rot_src, points3d_src,
+  Eigen::MatrixXd grad_0 = gauge_fix_matrix.transpose() *
+                           ComputeGradient(K_src, T_src, Rot_src, points3d_src,
                                            tracks_src, extrinsic_intrinsic_map);
   double grad_0_max_norm = grad_0.col(0).lpNorm<Eigen::Infinity>();
 
@@ -36,8 +38,8 @@ bool Zoom(const std::vector<Track>& tracks_src,
 
   // X. Compute value at alpha_low.
   double phi_lo = ComputeReprojectionErrorWithStepLength(
-      -grad_0, alpha_low, tracks_src, K_src, T_src, Rot_src, points3d_src,
-      extrinsic_intrinsic_map);
+      -gauge_fix_matrix * grad_0, alpha_low, tracks_src, K_src, T_src, Rot_src,
+      points3d_src, extrinsic_intrinsic_map);
 
   // X. Initial alpha
   double alpha_low_tmp_ = alpha_low;
@@ -63,8 +65,9 @@ bool Zoom(const std::vector<Track>& tracks_src,
     std::vector<Eigen::Matrix3d> K_tmp = K_src;
     std::vector<Eigen::Vector3d> Rot_tmp = Rot_src;
     std::vector<Eigen::Vector3d> points3d_tmp = points3d_src;
-    UpdateParameters(alpha_j * -grad_0, tracks_src, extrinsic_intrinsic_map,
-                     K_tmp, T_tmp, Rot_tmp, points3d_tmp);
+    UpdateParameters(alpha_j * gauge_fix_matrix * -grad_0, tracks_src,
+                     extrinsic_intrinsic_map, K_tmp, T_tmp, Rot_tmp,
+                     points3d_tmp);
     double phi_j =
         ComputeReprojectionError(tracks_src, K_tmp, extrinsic_intrinsic_map,
                                  Rot_tmp, T_tmp, points3d_tmp);
@@ -75,6 +78,7 @@ bool Zoom(const std::vector<Track>& tracks_src,
     } else {
       // X. Evaluate derivative value.
       Eigen::MatrixXd grad_j =
+          gauge_fix_matrix.transpose() *
           ComputeGradient(K_tmp, T_tmp, Rot_tmp, points3d_tmp, tracks_src,
                           extrinsic_intrinsic_map);
       double der_phi_j = grad_j.col(0).dot(step_dir.col(0));
@@ -106,9 +110,9 @@ bool LineSearchWithStrongWolfe(
     const std::vector<Eigen::Vector3d>& T_src,
     const std::vector<Eigen::Vector3d>& Rot_src,
     const std::vector<Eigen::Vector3d>& points3d_src,
-    const std::map<size_t, size_t>& extrinsic_intrinsic_map, size_t max_itr,
-    double min_step, double alpha_max, double c1, double c2,
-    double& alpha_star) {
+    const std::map<size_t, size_t>& extrinsic_intrinsic_map,
+    const Eigen::MatrixXd& gauge_fix_matrix, size_t max_itr, double min_step,
+    double alpha_max, double c1, double c2, double& alpha_star) {
   // X. Temporary buffer.
   std::vector<Eigen::Vector3d> T_tmp = T_src;
   std::vector<Eigen::Matrix3d> K_tmp = K_src;
@@ -118,7 +122,8 @@ bool LineSearchWithStrongWolfe(
   // X. Compute base value & base gradient.
   double phi_0 = ComputeReprojectionError(
       tracks_src, K_tmp, extrinsic_intrinsic_map, Rot_tmp, T_tmp, points3d_tmp);
-  Eigen::MatrixXd grad_0 = ComputeGradient(K_tmp, T_tmp, Rot_tmp, points3d_tmp,
+  Eigen::MatrixXd grad_0 = gauge_fix_matrix.transpose() *
+                           ComputeGradient(K_tmp, T_tmp, Rot_tmp, points3d_tmp,
                                            tracks_src, extrinsic_intrinsic_map);
   double grad_0_max_norm = grad_0.col(0).lpNorm<Eigen::Infinity>();
 
@@ -147,8 +152,9 @@ bool LineSearchWithStrongWolfe(
     points3d_tmp = points3d_src;
 
     // X. Update parameters based on alpha.
-    UpdateParameters(alpha_i * -grad_0, tracks_src, extrinsic_intrinsic_map,
-                     K_tmp, T_tmp, Rot_tmp, points3d_tmp);
+    UpdateParameters(alpha_i * gauge_fix_matrix * -grad_0, tracks_src,
+                     extrinsic_intrinsic_map, K_tmp, T_tmp, Rot_tmp,
+                     points3d_tmp);
 
     // X. Compute function value at alpha_i.
     phi_i = ComputeReprojectionError(tracks_src, K_tmp, extrinsic_intrinsic_map,
@@ -158,15 +164,16 @@ bool LineSearchWithStrongWolfe(
     if (phi_i > phi_0 + c1 * alpha_i * der_phi_0 ||
         (phi_i >= phi_i_1 && itr > 0)) {
       success = Zoom(tracks_src, K_src, T_src, Rot_src, points3d_src,
-                     extrinsic_intrinsic_map, alpha_i_1, alpha_i, c1, c2,
-                     max_itr, min_step, alpha_star);
+                     extrinsic_intrinsic_map, gauge_fix_matrix, alpha_i_1,
+                     alpha_i, c1, c2, max_itr, min_step, alpha_star);
       break;
     }
 
     // X. Compute gradient at alpha_i.
     Eigen::MatrixXd grad_i =
-        ComputeGradient(K_tmp, T_tmp, Rot_tmp, points3d_tmp, tracks_src,
-                        extrinsic_intrinsic_map);
+        gauge_fix_matrix.transpose() * ComputeGradient(K_tmp, T_tmp, Rot_tmp,
+                                                       points3d_tmp, tracks_src,
+                                                       extrinsic_intrinsic_map);
     der_phi_i = grad_i.col(0).dot(step_dir.col(0));
 
     // X. Condition 2.
@@ -179,8 +186,8 @@ bool LineSearchWithStrongWolfe(
     // X. Condition 3.
     if (der_phi_i >= 0) {
       success = Zoom(tracks_src, K_src, T_src, Rot_src, points3d_src,
-                     extrinsic_intrinsic_map, alpha_i, alpha_i_1, c1, c2,
-                     max_itr, min_step, alpha_star);
+                     extrinsic_intrinsic_map, gauge_fix_matrix, alpha_i,
+                     alpha_i_1, c1, c2, max_itr, min_step, alpha_star);
       break;
     }
 

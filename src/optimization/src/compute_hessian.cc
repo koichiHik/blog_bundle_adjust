@@ -18,10 +18,8 @@
 
 namespace optimization {
 
-Eigen::MatrixXd
-MakeHessianPositiveDefiniteViaMultipleIdentity(const Eigen::MatrixXd &H,
-                                               double multiple, double beta) {
-
+Eigen::MatrixXd MakeHessianPositiveDefiniteViaMultipleIdentity(
+    const Eigen::MatrixXd& H, double multiple, double beta) {
   Eigen::VectorXd diagonals = H.diagonal();
 
   double tau = 0;
@@ -46,14 +44,13 @@ MakeHessianPositiveDefiniteViaMultipleIdentity(const Eigen::MatrixXd &H,
   return H_tmp;
 }
 
-Eigen::MatrixXd
-ComputeHessian(const std::vector<Eigen::Matrix3d> &K,
-               const std::vector<Eigen::Vector3d> &T,
-               const std::vector<Eigen::Vector3d> &Rot,
-               const std::vector<Eigen::Vector3d> &points3d,
-               const std::vector<Track> &tracks,
-               const std::map<size_t, size_t> &extrinsic_intrinsic_map) {
-
+Eigen::MatrixXd ComputeHessian(
+    const std::vector<Eigen::Matrix3d>& K,
+    const std::vector<Eigen::Vector3d>& T,
+    const std::vector<Eigen::Vector3d>& Rot,
+    const std::vector<Eigen::Vector3d>& points3d,
+    const std::vector<Track>& tracks,
+    const std::map<size_t, size_t>& extrinsic_intrinsic_map) {
   CHECK(points3d.size() == tracks.size())
       << "Number of points and tracks must be the same.";
 
@@ -62,18 +59,14 @@ ComputeHessian(const std::vector<Eigen::Matrix3d> &K,
   size_t cam_int_num = K.size();
   size_t track_num = tracks.size();
   size_t projected_pnt_num = 0;
-  for (const Track &track : tracks) {
+  for (const Track& track : tracks) {
     projected_pnt_num += track.size();
   }
 
-  // X. Variable count.
-  size_t cam_ext_var_num = 6;
-  size_t cam_int_var_num = 5;
-  size_t points_var_num = 3;
-
   // X. Prepare buffer.
-  size_t param_num = cam_ext_num * cam_ext_var_num +
-                     cam_int_num * cam_int_var_num + track_num * points_var_num;
+  size_t param_num = cam_ext_num * kCameraExtrinsicParamsNum +
+                     cam_int_num * kCameraIntrinsicParamsNum +
+                     track_num * kPointParamsNum;
   Eigen::MatrixXd H = Eigen::MatrixXd::Zero(param_num, param_num);
 
   std::vector<Camera> cameras;
@@ -90,9 +83,7 @@ ComputeHessian(const std::vector<Eigen::Matrix3d> &K,
   // X. Inner loop.
   for (size_t trk_idx = 0; trk_idx < track_num; trk_idx++) {
     for (size_t cam_ext_idx = 0; cam_ext_idx < cam_ext_num; cam_ext_idx++) {
-
       if (tracks[trk_idx].count(cam_ext_idx)) {
-
         size_t cam_int_idx = extrinsic_intrinsic_map.at(cam_ext_idx);
 
         Eigen::Vector2d meas = tracks[trk_idx].at(cam_ext_idx);
@@ -103,19 +94,19 @@ ComputeHessian(const std::vector<Eigen::Matrix3d> &K,
         double u_res = (proj - meas)(0);
         double v_res = (proj - meas)(1);
 
-        size_t row_idx_tx = cam_ext_idx * cam_ext_var_num;
-        size_t row_idx_fx =
-            cam_ext_num * cam_ext_var_num + cam_int_idx * cam_int_var_num;
-        size_t row_idx_X = cam_ext_num * cam_ext_var_num +
-                           cam_int_num * cam_int_var_num +
-                           trk_idx * points_var_num;
+        size_t row_idx_tx = cam_ext_idx * kCameraExtrinsicParamsNum;
+        size_t row_idx_fx = cam_ext_num * kCameraExtrinsicParamsNum +
+                            cam_int_idx * kCameraIntrinsicParamsNum;
+        size_t row_idx_X = cam_ext_num * kCameraExtrinsicParamsNum +
+                           cam_int_num * kCameraIntrinsicParamsNum +
+                           trk_idx * kPointParamsNum;
 
-        size_t col_idx_tx = cam_ext_idx * cam_ext_var_num;
-        size_t col_idx_fx =
-            cam_ext_num * cam_ext_var_num + cam_int_idx * cam_int_var_num;
-        size_t col_idx_X = cam_ext_num * cam_ext_var_num +
-                           cam_int_num * cam_int_var_num +
-                           trk_idx * points_var_num;
+        size_t col_idx_tx = cam_ext_idx * kCameraExtrinsicParamsNum;
+        size_t col_idx_fx = cam_ext_num * kCameraExtrinsicParamsNum +
+                            cam_int_idx * kCameraIntrinsicParamsNum;
+        size_t col_idx_X = cam_ext_num * kCameraExtrinsicParamsNum +
+                           cam_int_num * kCameraIntrinsicParamsNum +
+                           trk_idx * kPointParamsNum;
 
         // 1st derivative x 1st derivative.
         {
@@ -3002,4 +2993,4 @@ ComputeHessian(const std::vector<Eigen::Matrix3d> &K,
 
   return H;
 }
-} // namespace optimization
+}  // namespace optimization

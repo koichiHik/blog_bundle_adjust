@@ -28,9 +28,9 @@ bool LineSearchWithStrongWolfe(
     const std::vector<Eigen::Vector3d>& T_src,
     const std::vector<Eigen::Vector3d>& Rot_src,
     const std::vector<Eigen::Vector3d>& points3d_src,
-    const std::map<size_t, size_t>& extrinsic_intrinsic_map, size_t max_itr,
-    double min_step, double alpha_max, double c1, double c2,
-    double& alpha_star);
+    const std::map<size_t, size_t>& extrinsic_intrinsic_map,
+    const Eigen::MatrixXd& gauge_fix_matrix, size_t max_itr, double min_step,
+    double alpha_max, double c1, double c2, double& alpha_star);
 
 class GradientDescent {
  public:

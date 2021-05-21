@@ -165,6 +165,22 @@ void GradientDescentWithLineSearch::Optimize(
         extrinsics_src[cam_idx].block<3, 3>(0, 0), Rot[cam_idx]);
   }
 
+  // X. Create gauge fix matrix.
+  Eigen::MatrixXd gauge_fix_matrix;
+  {
+    size_t num_params = T.size() * kCameraExtrinsicParamsNum +
+                        K.size() * kCameraIntrinsicParamsNum +
+                        points3d_.size() * kPointParamsNum;
+    size_t num_gauge_group = 7;
+    size_t cam0_x = 0, cam0_y = 1, cam0_z = 2;
+    size_t cam0_rx = 3, cam0_ry = 4, cam0_rz = 5;
+    size_t cam1_z = 6;
+    std::vector<size_t> gauge_indices{cam0_x,  cam0_y,  cam0_z, cam0_rx,
+                                      cam0_ry, cam0_rz, cam1_z};
+    gauge_fix_matrix =
+        CreateGaugeFixMatrix(num_params, num_gauge_group, gauge_indices);
+  }
+
   // X. Start gradient descent.
   int loop_count = 0;
   double alpha = 0;
@@ -172,22 +188,26 @@ void GradientDescentWithLineSearch::Optimize(
     // X. Solve line search for the gradient direction.
     bool line_search_success = LineSearchWithStrongWolfe(
         tracks_src, K, T, Rot, points3d_, extrinsic_intrinsic_map_src,
-        LINE_SEARCH_MAX_ITR, LINE_SEARCH_MIN_STEP, LINE_SEARCH_ALPHA_MAX,
-        LINE_SEARCH_C1, LINE_SEARCH_C2, alpha);
+        gauge_fix_matrix, LINE_SEARCH_MAX_ITR, LINE_SEARCH_MIN_STEP,
+        LINE_SEARCH_ALPHA_MAX, LINE_SEARCH_C1, LINE_SEARCH_C2, alpha);
     if (!line_search_success) {
       LOG(INFO) << "Line search did not converge. Optimization failed.";
       break;
     }
 
     // X. Reflect result from line search.
-    Eigen::MatrixXd grad = optimization::ComputeGradient(
-        K, T, Rot, points3d_, tracks_src, extrinsic_intrinsic_map_src);
-    UpdateParameters(alpha * -grad, tracks_src, extrinsic_intrinsic_map_src, K,
-                     T, Rot, points3d_);
+    Eigen::MatrixXd grad =
+        gauge_fix_matrix.transpose() *
+        optimization::ComputeGradient(K, T, Rot, points3d_, tracks_src,
+                                      extrinsic_intrinsic_map_src);
+    UpdateParameters(alpha * gauge_fix_matrix * -grad, tracks_src,
+                     extrinsic_intrinsic_map_src, K, T, Rot, points3d_);
 
     // X. Compute new gradient.
-    Eigen::MatrixXd new_grad = optimization::ComputeGradient(
-        K, T, Rot, points3d_, tracks_src, extrinsic_intrinsic_map_src);
+    Eigen::MatrixXd new_grad =
+        gauge_fix_matrix.transpose() *
+        optimization::ComputeGradient(K, T, Rot, points3d_, tracks_src,
+                                      extrinsic_intrinsic_map_src);
 
     if (loop_count % 1000 == 0 || new_grad.norm() < TERM_GRADIENT_NORM) {
       // X. Compute New and Old reprojection error.
@@ -220,6 +240,6 @@ void GradientDescentWithLineSearch::Optimize(
     extrinsics_dst[cam_ext_idx].block<3, 3>(0, 0) = R;
     extrinsics_dst[cam_ext_idx].block<3, 1>(0, 3) = T[cam_ext_idx];
   }
-}
+}  // namespace optimization
 
 }  // namespace optimization
